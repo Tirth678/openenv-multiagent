@@ -2,9 +2,14 @@
 MongoDB connection and utilities.
 """
 
+import logging
 from typing import Optional
+
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class MongoDB:
@@ -15,9 +20,14 @@ class MongoDB:
     
     @classmethod
     async def connect(cls) -> None:
-        """Connect to MongoDB."""
+        """Connect to MongoDB, or no-op if MONGODB_URL is unset (in-memory only)."""
         if not settings.MONGODB_URL:
-            raise ValueError("MONGODB_URL not configured")
+            cls.client = None
+            cls.db = None
+            logger.warning(
+                "MONGODB_URL not set; API runs without database persistence (episodes/metrics in-process only)"
+            )
+            return
         
         cls.client = AsyncIOMotorClient(settings.MONGODB_URL)
         cls.db = cls.client[settings.MONGODB_DB_NAME]
@@ -33,6 +43,8 @@ class MongoDB:
         if cls.client:
             cls.client.close()
             print("✓ Disconnected from MongoDB")
+        cls.client = None
+        cls.db = None
     
     @classmethod
     async def _create_indexes(cls) -> None:
@@ -59,13 +71,11 @@ class MongoDB:
         print("✓ Database indexes created")
     
     @classmethod
-    def get_db(cls) -> AsyncIOMotorDatabase:
-        """Get database instance."""
-        if cls.db is None:
-            raise RuntimeError("Database not connected")
+    def get_db(cls) -> Optional[AsyncIOMotorDatabase]:
+        """Get database instance (None if running without MongoDB)."""
         return cls.db
 
 
-def get_db() -> AsyncIOMotorDatabase:
-    """Get database instance."""
+def get_db() -> Optional[AsyncIOMotorDatabase]:
+    """FastAPI dependency: database or None if persistence disabled."""
     return MongoDB.get_db()

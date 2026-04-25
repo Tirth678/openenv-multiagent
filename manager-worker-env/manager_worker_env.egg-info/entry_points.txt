@@ -1,5 +1,5 @@
 [console_scripts]
-manager-worker-env = manager_worker_env.cli:main
+manager-worker-env = env.cli:main
 run-training = training.run_training:main
 server = orchestra_backend.main:main
 train-manager = training.train_manager:main

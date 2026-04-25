@@ -2,10 +2,8 @@
 Episode API routes.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from datetime import datetime
-from motor.motor_asyncio import AsyncIOMotorDatabase
-from db.mongodb import get_db
 from services.episode_service import EpisodeService
 from models.episode import (
     EpisodeStartRequest, EpisodeStartResponse, ActionRequest, StepResponse,
@@ -16,9 +14,9 @@ from models.episode import (
 router = APIRouter(prefix="/episode", tags=["Episodes"])
 
 
-async def get_episode_service(db: AsyncIOMotorDatabase = Depends(get_db)) -> EpisodeService:
-    """Get episode service."""
-    return EpisodeService(db)
+def get_episode_service(request: Request) -> EpisodeService:
+    """Singleton episode service (lives on app.state)."""
+    return request.app.state.episode_service
 
 
 @router.post("/start", response_model=EpisodeStartResponse)

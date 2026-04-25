@@ -48,6 +48,8 @@ dependencies = [
     "uvicorn>=0.24.0",
     "websockets>=15.0.1",
     "pydantic>=2.0.0",
+    "pymongo>=4.0.0",
+    "motor>=3.0.0",
     "requests>=2.25.0",
     "huggingface-hub>=0.20.0",
     "python-dotenv>=1.1.0",
@@ -110,18 +112,18 @@ Repository = "https://github.com/yourusername/openenv-multiagent.git"
 "Bug Tracker" = "https://github.com/yourusername/openenv-multiagent/issues"
 
 [project.scripts]
-manager-worker-env = "manager_worker_env.cli:main"
+manager-worker-env = "env.cli:main"
 train-manager = "training.train_manager:main"
 run-training = "training.run_training:main"
 server = "orchestra_backend.main:main"
 
-[tool.setuptools]
-packages = ["env", "training", "orchestra-backend"]
+[tool.setuptools.package-dir]
+"" = "."
+"manager_worker_env" = "src/manager_worker_env"
 
-[tool.setuptools.package-data]
-env = ["*.py"]
-training = ["*.py"]
-orchestra-backend = ["*.py"]
+[tool.setuptools.packages.find]
+where = [".", "src"]
+include = ["env*", "training*", "orchestra_backend*", "manager_worker_env*"]
 
 [tool.black]
 line-length = 100
@@ -146,7 +148,7 @@ extend-exclude = '''
 profile = "black"
 line_length = 100
 skip_gitignore = true
-known_first_party = ["env", "training", "orchestra-backend"]
+known_first_party = ["env", "training", "orchestra_backend", "manager_worker_env"]
 
 [tool.mypy]
 python_version = "3.9"
@@ -192,7 +194,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["env", "training", "orchestra-backend"]
+source = ["env", "training", "orchestra_backend"]
 omit = [
     "*/tests/*",
     "*/test_*.py",

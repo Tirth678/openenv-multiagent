@@ -9,16 +9,23 @@ import logging
 import time
 from contextlib import asynccontextmanager
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Project root (manager-worker-env) and backend package dir for `from config` / `from env`
+_BACKEND_ROOT = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(_BACKEND_ROOT)
+for _p in (_PROJECT_ROOT, _BACKEND_ROOT):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 
 from config import settings
 from db.mongodb import MongoDB
 from api.routes import episode, metrics, model, websocket
+from services.episode_service import EpisodeService
+from services.metrics_service import MetricsService
+from api.middleware.rate_limit import rate_limiter
 
 # Configure logging
 logging.basicConfig(
@@ -35,21 +42,22 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifespan."""
-    # Startup
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     try:
         await MongoDB.connect()
-        logger.info("✓ Database connected")
+        if MongoDB.get_db() is not None:
+            logger.info("✓ Database connected")
     except Exception as e:
-        logger.error(f"✗ Database connection failed: {e}")
-        raise
-    
-    yield
-    
-    # Shutdown
-    logger.info("Shutting down...")
-    await MongoDB.disconnect()
-    logger.info("✓ Database disconnected")
+        logger.error("✗ Database connection failed: %s", e)
+        logger.warning("Continuing without database persistence where supported.")
+    app.state.episode_service = EpisodeService(MongoDB.get_db())
+    app.state.metrics_service = MetricsService(MongoDB.get_db())
+    try:
+        yield
+    finally:
+        logger.info("Shutting down...")
+        await MongoDB.disconnect()
+        logger.info("✓ Database disconnected")
 
 
 # ============================================================================
@@ -71,6 +79,15 @@ app.add_middleware(
     allow_methods=settings.CORS_ALLOW_METHODS,
     allow_headers=settings.CORS_ALLOW_HEADERS,
 )
+
+rate_limiter.requests = settings.RATE_LIMIT_REQUESTS
+rate_limiter.window = settings.RATE_LIMIT_WINDOW
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    await rate_limiter.check_rate_limit(request)
+    return await call_next(request)
 
 # Track startup time
 startup_time = time.time()
@@ -130,16 +147,15 @@ app.include_router(websocket.router)
 def main():
     """Main entry point for the server."""
     import uvicorn
-    
+
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Server: {settings.SERVER_HOST}:{settings.SERVER_PORT}")
-    
+
     uvicorn.run(
-        "main:app",
+        app,
         host=settings.SERVER_HOST,
         port=settings.SERVER_PORT,
         log_level=settings.LOG_LEVEL.lower(),
-        reload=settings.DEBUG,
     )
 
 

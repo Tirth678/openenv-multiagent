@@ -208,15 +208,24 @@ class ManagerWorkerEnv(Environment):
         """Set the environment state."""
         self._state = value
     
-    def reset(self) -> ManagerWorkerObservation:
+    def reset(self, task_id: Optional[str] = None) -> ManagerWorkerObservation:
         """
         Reset environment to initial state.
+        
+        Args:
+            task_id: If set, use this task from the library; otherwise sample by difficulty.
         
         Returns:
             observation: ManagerWorkerObservation with initial state
         """
-        # Select random task from task library
-        task = self.task_library.sample_task(difficulty=self.task_difficulty)
+        if task_id:
+            t = self.task_library.get_task_by_id(task_id)
+            task = t if t is not None else self.task_library.sample_task(
+                difficulty=self.task_difficulty
+            )
+        else:
+            # Select random task from task library
+            task = self.task_library.sample_task(difficulty=self.task_difficulty)
         self._current_subtasks = list(task.subtasks)
         self.state.task = {
             'task_id': task.task_id,

@@ -2,19 +2,17 @@
 Metrics API routes.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from datetime import datetime
-from motor.motor_asyncio import AsyncIOMotorDatabase
-from db.mongodb import get_db
 from services.metrics_service import MetricsService
 from models.metrics import MetricsResponse, MetricsHistoryResponse
 
 router = APIRouter(prefix="/training/metrics", tags=["Metrics"])
 
 
-async def get_metrics_service(db: AsyncIOMotorDatabase = Depends(get_db)) -> MetricsService:
-    """Get metrics service."""
-    return MetricsService(db)
+def get_metrics_service(request: Request) -> MetricsService:
+    """Singleton metrics service (lives on app.state)."""
+    return request.app.state.metrics_service
 
 
 @router.get("", response_model=MetricsResponse)

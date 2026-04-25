@@ -1,2 +1,2 @@
 # Pull backend deps; Vercel installs from the repo root.
--r manager-worker-env/orchestra-backend/requirements.txt
+-r manager-worker-env/orchestra_backend/requirements.txt

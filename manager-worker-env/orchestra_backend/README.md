@@ -5,7 +5,7 @@ Production-ready FastAPI backend for the OrchestraAI Manager-Worker RL Environme
 ## Architecture
 
 ```
-orchestra-backend/
+orchestra_backend/
 ├── main.py                    ← FastAPI entry point
 ├── config.py                  ← Configuration & environment variables
 ├── requirements.txt           ← Python dependencies
@@ -49,10 +49,10 @@ pip install -e ".[backend]"
 
 ### 2. Configure Environment
 
-Create `.env` file in `orchestra-backend/`:
+Create `.env` file in `orchestra_backend/` (or omit `MONGODB_URL` to run with in-process episode state only).
 
 ```env
-MONGODB_URL=mongodb+srv://yt:Zt2Gp6HjOCpzHux5@complete-backend.uffvz17.mongodb.net/openenv-project
+MONGODB_URL=mongodb://localhost:27017
 MONGODB_DB_NAME=openenv-project
 DEBUG=True
 SERVER_PORT=8000
@@ -61,8 +61,9 @@ SERVER_PORT=8000
 ### 3. Start Server
 
 ```bash
-cd orchestra-backend
-python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+cd manager-worker-env
+python -m orchestra_backend.main
+# or: uvicorn orchestra_backend.main:app --host 0.0.0.0 --port 8000
 ```
 
 Server will be available at `http://localhost:8000`
@@ -187,6 +188,6 @@ API docs available at `http://localhost:8000/docs`
 - Or kill process: `lsof -ti:8000 | xargs kill -9`
 
 ### Import Errors
-- Ensure you're in `orchestra-backend/` directory
+- Ensure you're in `manager-worker-env/` (package root) so `env` and `orchestra_backend` import correctly
 - Check Python path setup
 - Verify all dependencies installed
