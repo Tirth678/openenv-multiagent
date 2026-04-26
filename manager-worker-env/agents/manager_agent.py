@@ -29,7 +29,9 @@ def _to_dict_obs(obs: Union[ManagerWorkerObservation, Dict[str, Any]]) -> Dict[s
         return {
             "task_embedding": np.array(obs.task_embedding, dtype=np.float32),
             "worker_states": np.array(obs.worker_states, dtype=np.float32),
+            "num_workers": np.array([obs.num_workers], dtype=np.float32),
             "subtask_status": np.array(obs.subtask_status, dtype=np.int8),
+            "num_subtasks": np.array([obs.num_subtasks], dtype=np.float32),
             "budget_remaining": np.array([obs.budget_remaining], dtype=np.float32),
             "steps_remaining": np.array([obs.steps_remaining], dtype=np.float32),
         }
@@ -48,9 +50,11 @@ class HeuristicManagerAgent:
 
     def __init__(self) -> None:
         self._step = 0
+        self.last_thought = "Initialized."
 
     def reset(self) -> None:
         self._step = 0
+        self.last_thought = "Resetting..."
 
     def predict(
         self,
@@ -58,6 +62,7 @@ class HeuristicManagerAgent:
         deterministic: bool = True,
     ) -> ManagerAction:
         action_id = self.ACTION_CYCLE[self._step % len(self.ACTION_CYCLE)]
+        self.last_thought = f"Cycle step {self._step % len(self.ACTION_CYCLE)}: taking action {action_id}."
         self._step += 1
         return ManagerAction(action_id=action_id)
 
@@ -89,9 +94,11 @@ class ParallelManagerAgent:
         self.correct_threshold = correct_threshold
         self.max_corrections_per_worker = max_corrections_per_worker
         self._corrections: Dict[int, int] = {}
+        self.last_thought = "Initialized."
 
     def reset(self) -> None:
         self._corrections = {}
+        self.last_thought = "Resetting..."
 
     @staticmethod
     def _unpack_obs(obs: Union[ManagerWorkerObservation, Dict[str, Any]]):
@@ -159,6 +166,7 @@ class ParallelManagerAgent:
         # Phase 1: fan out — assign a subtask to an idle worker, but only while
         # there is work that nobody has started yet.
         if idle_workers and not_yet_started > 0:
+            self.last_thought = f"Assigning work to idle worker. {not_yet_started} subtasks remaining to start."
             return ManagerAction(action_id=self.ASSIGN)
 
         # Phase 2: look at the first active worker and decide check / correct / approve.
@@ -167,6 +175,7 @@ class ParallelManagerAgent:
             checked_quality = float(row[3])
             # If we've never seen this worker's quality, check it first.
             if checked_quality <= 0.0:
+                self.last_thought = f"Checking output of active worker {wid} to reveal quality."
                 return ManagerAction(action_id=self.CHECK, target_worker_id=wid)
             # Quality revealed and bad — try a correction (bounded).
             if (
@@ -174,11 +183,14 @@ class ParallelManagerAgent:
                 and self._corrections.get(wid, 0) < self.max_corrections_per_worker
             ):
                 self._corrections[wid] = self._corrections.get(wid, 0) + 1
+                self.last_thought = f"Worker {wid} quality ({checked_quality:.2f}) low. Sending correction."
                 return ManagerAction(action_id=self.CORRECT, target_worker_id=wid)
             # Otherwise approve and free the worker.
+            self.last_thought = f"Approving worker {wid} output (quality {checked_quality:.2f})."
             return ManagerAction(action_id=self.APPROVE, target_worker_id=wid)
 
         # No idle workers, no active workers, no unassigned subtasks → done. Approve as a no-op-ish.
+        self.last_thought = "No more work to assign. Waiting for workers or idle."
         return ManagerAction(action_id=self.APPROVE)
 
 
@@ -195,10 +207,12 @@ class PPOManagerAgent:
 
         self.model = PPO.load(model_path)
         self.model_path = model_path
+        self.last_thought = "Model loaded."
 
     def reset(self) -> None:
         # PPO policies are stateless w.r.t. the env between episodes here; the
         # underlying RNG is handled by SB3.
+        self.last_thought = "Resetting policy..."
         pass
 
     def predict(
@@ -207,6 +221,7 @@ class PPOManagerAgent:
         deterministic: bool = True,
     ) -> ManagerAction:
         action, _ = self.model.predict(_to_dict_obs(obs), deterministic=deterministic)
+        self.last_thought = f"PPO Policy selected action {action} based on current observation."
         return ManagerAction(action_id=int(action))
 
 

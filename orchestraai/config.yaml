@@ -1,0 +1,53 @@
+environment:
+  num_workers: 4
+  token_budget: 5000
+  max_steps: 100
+  subtasks_per_project: 6
+
+workers:
+  types:
+    - id: 0
+      name: "SmolLM-135M"
+      model_id: "HuggingFaceTB/SmolLM-135M"
+      skill_level: 0.6          # Lower skill = more failures
+      speed: "fast"
+      cost_per_token: 0.5
+    - id: 1
+      name: "SmolLM-360M"
+      model_id: "HuggingFaceTB/SmolLM-360M"
+      skill_level: 0.75
+      speed: "medium"
+      cost_per_token: 1.0
+    - id: 2
+      name: "Llama-3.2-1B"
+      model_id: "meta-llama/Llama-3.2-1B"
+      skill_level: 0.90
+      speed: "slow"
+      cost_per_token: 3.0
+    - id: 3
+      name: "Llama-3.2-3B"
+      model_id: "meta-llama/Llama-3.2-3B"
+      skill_level: 0.95
+      speed: "very_slow"
+      cost_per_token: 6.0
+
+training:
+  total_timesteps: 500000
+  learning_rate: 0.0003
+  n_steps: 2048
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  ent_coef: 0.01
+  save_freq: 10000
+  log_dir: "./logs"
+  model_save_path: "./models/ppo_manager"
+
+rewards:
+  quality_weight: 10.0
+  token_cost_weight: 0.01
+  completion_bonus: 100.0
+  failure_penalty: -5.0
+  unnecessary_check_penalty: -0.5

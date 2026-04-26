@@ -1,0 +1,132 @@
+
+================================================================================
+PHASE 2 COMPREHENSIVE TEST SUITE
+================================================================================
+
+================================================================================
+TEST 1: Environment Functionality
+================================================================================
+✓ Environment created and reset
+  - Observation type: ManagerWorkerObservation
+  - Task embedding: 64-dim
+  - Worker states: 4x5
+✓ Ran 5 steps successfully
+  - Total reward: 39.50
+  - Render output:
+================================================================================
+Step 5/50
+Budget: 850/1000 tokens
+Task: research
+Subtasks: 0/5 complete
+
+Worker 0: ACTIVE | Progress: 1.00 | Quality: 0.00 | Skill: 0.56
+Worker 1: IDLE | Progress: 0.00 | Quality: 0.00 | Skill: 0.53
+Worker 2: IDLE | Progress: 0.00 | Quality: 0.00 | Skill: 0.72
+Worker 3: IDLE | Progress: 0.00 | Quality: 0.00 | Skill: 0.31
+================================================================================
+
+================================================================================
+TEST 2: Environment Wrapper (Gymnasium Compatible)
+================================================================================
+✓ Environment wrapper created
+  - Observation space: Dict('budget_remaining': Box(0.0, 1.0, (1,), float32), 'num_subtasks': Box(0.0, 1.0, (1,), float32), 'num_workers': Box(0.0, 1.0, (1,), float32), 'steps_remaining': Box(0.0, 1.0, (1,), float32), 'subtask_status': MultiBinary(8), 'task_embedding': Box(-1.0, 1.0, (64,), float32), 'worker_states': Box(0.0, 1.0, (4, 5), float32))
+  - Action space: Discrete(7)
+✓ Reset successful
+  - Observation keys: dict_keys(['task_embedding', 'worker_states', 'num_workers', 'subtask_status', 'num_subtasks', 'budget_remaining', 'steps_remaining'])
+✓ Step successful
+  - Reward: 9.30
+  - Terminated: False
+  - Truncated: False
+
+================================================================================
+TEST 3: Training Configuration
+================================================================================
+✓ Training config created
+  - Timesteps: 1,000
+  - Learning rate: 0.0003
+  - N steps: 2048
+  - Batch size: 64
+  - N epochs: 10
+✓ Config converted to dict with 12 keys
+
+================================================================================
+TEST 4: Logging Setup
+================================================================================
+✓ Logging manager created
+✓ TensorBoard enabled: logs/tensorboard
+✓ Metrics logged successfully
+
+================================================================================
+TEST 5: Model Training (Quick Test)
+================================================================================
+✓ Training config created
+  - Timesteps: 500
+================================================================================
+Training Manager Agent with PPO
+================================================================================
+
+Training Configuration:
+  timesteps: 500
+  learning_rate: 0.0003
+  n_steps: 2048
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  ent_coef: 0.0
+  vf_coef: 0.5
+  max_grad_norm: 0.5
+  seed: 42
+
+Creating environment...
+Creating PPO model...
+
+Training for 500 timesteps...
+Model will be saved to: models/test_ppo_manager
+--------------------------------------------------------------------------------
+
+Saving model to models/test_ppo_manager...
+================================================================================
+Training Complete!
+================================================================================
+✓ Model trained successfully
+  - Model type: PPO
+✓ Model saved to disk: models/test_ppo_manager.zip
+  - File size: 280.5 KB
+
+================================================================================
+TEST 6: Model Inference
+================================================================================
+✓ Model loaded from models/test_ppo_manager
+✓ Inference runner created
+
+✗ Model Inference FAILED: 'num_subtasks'
+
+================================================================================
+TEST 7: File Structure
+================================================================================
+✓ training/__init__.py (922 bytes)
+✓ training/train_manager.py (10452 bytes)
+✓ training/logging_setup.py (6734 bytes)
+✓ training/huggingface_integration.py (9745 bytes)
+✓ training/run_training.py (6045 bytes)
+✓ training/inference.py (6808 bytes)
+✓ colab_notebook.ipynb (11188 bytes)
+✗ PHASE2_COMPLETE.md NOT FOUND
+
+================================================================================
+TEST SUMMARY
+================================================================================
+✓ PASS: Environment Functionality
+✓ PASS: Environment Wrapper
+✓ PASS: Training Configuration
+✓ PASS: Logging Setup
+✓ PASS: Model Training
+✗ FAIL: Model Inference
+✗ FAIL: File Structure
+
+Total: 5/7 tests passed
+
+⚠ 2 test(s) failed. Please review.
+================================================================================

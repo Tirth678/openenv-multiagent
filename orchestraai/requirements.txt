@@ -1,0 +1,25 @@
+# Core RL
+gymnasium>=0.29.0
+stable-baselines3>=2.2.0
+torch>=2.2.0
+
+# LLM + Training
+transformers>=4.40.0
+trl>=0.8.0
+accelerate>=0.28.0
+bitsandbytes>=0.43.0
+datasets>=2.18.0
+peft>=0.10.0
+
+# UI
+gradio>=4.25.0
+
+# Monitoring
+wandb>=0.16.0
+
+# Utils
+numpy>=1.26.0
+pyyaml>=6.0
+faker>=24.0.0
+pytest>=8.0.0
+rich>=13.0.0           # For pretty terminal output
