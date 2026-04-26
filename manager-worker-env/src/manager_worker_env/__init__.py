@@ -1,14 +1,20 @@
 """
-Manager-Worker RL Environment - OpenEnv-compatible multi-agent environment.
-
-This package provides a reinforcement learning environment where a Manager agent
-coordinates multiple Worker agents to complete complex tasks under token budget constraints.
+Compatibility shim: canonical implementation lives in the top-level ``env`` package.
 """
 
-from .environment import ManagerWorkerEnv
-from .models import (
-    ManagerWorkerObservation,
+from __future__ import annotations
+
+import os
+import sys
+
+_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if _root not in sys.path:
+    sys.path.insert(0, _root)
+
+from env import (  # noqa: E402
     ManagerAction,
+    ManagerWorkerEnv,
+    ManagerWorkerObservation,
     ManagerWorkerState,
     WorkerStateModel,
 )

@@ -2,7 +2,7 @@
 Vercel + monorepo entrypoint.
 
 Vercel builds from the repository root. The real FastAPI app lives under
-`manager-worker-env/orchestra-backend/`. This file re-exports `app` so the
+`manager-worker-env/orchestra_backend/`. This file re-exports `app` so the
 Python runtime can discover it.
 """
 
@@ -10,7 +10,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
-ORCH = Path(__file__).resolve().parent / "manager-worker-env" / "orchestra-backend"
+ORCH = Path(__file__).resolve().parent / "manager-worker-env" / "orchestra_backend"
 sys.path.insert(0, str(ORCH))
 
 MAIN = ORCH / "main.py"

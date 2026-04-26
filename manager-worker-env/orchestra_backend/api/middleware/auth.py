@@ -3,7 +3,6 @@ JWT authentication middleware.
 """
 
 from fastapi import HTTPException, status
-from orchestra_backend.config import settings
 
 
 async def verify_token(token: str) -> dict:

@@ -2,7 +2,7 @@
 Metrics tracking and management service.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from db.repositories.metrics_repo import MetricsRepository
@@ -12,10 +12,10 @@ import numpy as np
 class MetricsService:
     """Service for metrics management."""
     
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: Optional[AsyncIOMotorDatabase] = None):
         """Initialize service."""
         self.db = db
-        self.repo = MetricsRepository(db)
+        self.repo = MetricsRepository(db) if db is not None else None
         self.episode_rewards: List[float] = []
         self.episode_lengths: List[int] = []
         self.total_timesteps = 0
@@ -47,7 +47,8 @@ class MetricsService:
             "average_episode_length": float(np.mean(self.episode_lengths[-100:])) if self.episode_lengths else 0.0,
         }
         
-        await self.repo.create(metrics_doc)
+        if self.repo is not None:
+            await self.repo.create(metrics_doc)
     
     async def get_current_metrics(self) -> Dict[str, Any]:
         """Get current training metrics."""
@@ -63,6 +64,8 @@ class MetricsService:
     
     async def get_metrics_history(self, limit: int = 100) -> List[Dict[str, Any]]:
         """Get historical metrics."""
+        if self.repo is None:
+            return []
         metrics = await self.repo.get_latest(limit=limit)
         
         for metric in metrics:
